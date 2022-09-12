@@ -69,13 +69,27 @@ class MyPromise {
                 // then 可以链式调用，因此 then 返回的应该还是一个 promise 对象，
                 // 并且改变这个返回的 promise 对象的状态的 resolve 和 reject 方法应该在当前的 promise 中被调用，
                 // 并且将当前 promise 的 value 或 reason 作为参数传入，这样下一个 promise 的 then 方法中就可以拿到上一个 promise 传过来的值
-                setTimeout(() => resolve(onFulfilled(this.value)));
+                // setTimeout(() => resolve(onFulfilled(this.value)));
+                setTimeout(() => {
+                    try {
+                        this.resolvePromise(promise, onFulfilled(this.value), resolve, reject);
+                    } catch(error) {
+                        reject(error);
+                    }
+                })
             }
             if(this.state === 'rejected') {
                 // 原生 Promise 中 promise.then() 括号内部的代码是异步执行的。
                 // 注意，这里依旧是 resolve 而不是 reject，因为 promise 状态是不应该互相影响的。
                 // 上一个 promise 只要不抛错，那么下一个 promise 就应该执行 onResolved 回调。
-                setTimeout(() => resolve(onRejected(this.reason)));
+                // setTimeout(() => resolve(onRejected(this.reason)));
+                setTimeout(() => {
+                    try {
+                        this.resolvePromise(promise, onRejected(this.reason), resolve, reject);
+                    } catch(error) {
+                        reject(error);
+                    }
+                })
             }
             // 如果我们在 executor 中使用 setTimeout 延迟执行 resolve 或 reject，我们会发现执行 then 时，当前状态为 pending，因此我们还需要加入 pending 状态下的判断。
             if(this.state === 'pending') {
@@ -83,21 +97,92 @@ class MyPromise {
                 // 先存起来，当调用 resolve 或 reject 时再去执行回调
                 // 仅保存 pending 状态下的 promise，因为如果是 resolved 或 rejected 状态下的 promise，直接执行回调即可，因为其状态和值已经改变。
                 // 注意，这里的this 调用then的那个对象，并非本实例
-                this.callbacks.push({ 
+                this.callbacks.push({
                     fulfilled: () => {
-                        console.log(`this.value1111, ${this}   ${this.value}`);
-                        setTimeout(() => resolve(onFulfilled(this.value)))
+                        setTimeout(() => {
+                            try {
+                                this.resolvePromise(promise, onFulfilled(this.value), resolve, reject)
+                            } catch(error) {
+                                reject(error)
+                            }
+                        })
                     },
                     rejected: () => {
-                        setTimeout(() => resolve(onRejected(this.reason)))
+                        setTimeout(() => {
+                            try {
+                                this.resolvePromise(promise, onRejected(this.reason), resolve, reject)
+                            } catch(error) {
+                                reject(error)
+                            }
+                        })
                     }
-                });
+                })
             }
         })
         return promise;
     }
-}
 
+
+
+
+    /**
+        new Promise((resolve, reject) => {
+            resolve()
+        }).then(() => {
+            return new Promise((resolve, reject) => {
+                resolve('hi')
+            })
+        }).then(res => console.log(res));
+    
+        if(this.state === 'rejected') {
+            setTimeout(() => {
+                try {
+                    this.resolvePromise(promise, onRejected(this.reason), resolve, reject);
+                } catch(error) {
+                    reject(error);
+                }
+            })
+        }
+     */
+    resolvePromise(promise, result, resolve, reject) {
+        // const p = promise.then(() => {return p}) 一个 promise 的 onResolved 返回了自身 直接抛异常
+        if(promise === result) reject(new TypeError('Chaining cycle detected for promise'));
+        // 处理返回promise实例
+        if (result && typeof result === 'object' || typeof result === 'function') {
+            // 为了保证成功和失败只能调用其中一个，声明变量 called 来作为标记。
+            let called;
+            try {
+                let then =result.then;
+                // then如果是一个函数，则说明result 是一个 promise 对象
+                if (typeof then === 'function') {
+                    // 相当于result.then((value)=>{})
+                    then.call(result, value => {
+                        if (called) return;
+                        called = true;
+                        // 在成功时 继续调用 resolvePromise 并且把拿到的值作为新的 result 传入
+                        this.resolvePromise(promise, value, resolve, reject);
+                    }, reason => {
+                        if (called) return
+                        called = true
+                        reject(reason);
+                    })
+                } 
+                // 如果 then 不是一个函数，那就说明 result 是一个函数或者是一个普通对象，那就直接 resolve
+                else {
+                    if (called) return;
+                    called = true;
+                    resolve(result);
+                }
+            } catch(error) {
+                if (called) return
+                called = true
+                reject(error)
+            }
+        } else {
+            resolve(result);
+        }
+    }
+}
 
 // 测试
 let promise1 = new MyPromise((resolve, reject) => {
@@ -118,7 +203,7 @@ let promise3 = promise2.then((value)=>{
         setTimeout(()=>{
             console.log(`promise2 finish ${value}`);
             // resolve(10)
-        }, 20000)
+        }, 2000)
     }
 );
 
@@ -129,8 +214,6 @@ let promise3 = promise2.then((value)=>{
 //     console.log(value);
 // })
 // console.log(iPromise);
-
-
 
 
 

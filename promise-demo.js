@@ -86,7 +86,7 @@ new Promise((resolve, reject) => {
     return new Promise((resolve, reject) => {
         resolve('hi')
     })
-}).then(res => console.log(res))
+}).then(res => console.log(res));
 
 
 
