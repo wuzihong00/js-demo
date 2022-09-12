@@ -93,6 +93,7 @@ class MyPromise {
     }
 }
 
+export {MyPromise};
 
 
 

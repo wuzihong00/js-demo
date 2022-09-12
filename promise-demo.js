@@ -1,4 +1,5 @@
-const fs = require('fs')
+// import { MyPromise } from './MyPromise.js';
+const fs = require('fs');
 // 异步读取两个文件，并拼接起来，输出到一个共同的文件当中
 // 等价于all写法
 // let filePath = './output2.txt';
@@ -37,7 +38,7 @@ let msg2 = undefined;
 let defaultReturn = readFile(filePath)
                         .then(value=>{
                             let message = value;
-                            console.log(`article ${message}`);
+                            // console.log(`article ${message}`);
                             return writeFile('./input.txt', message);
                         },reason=>{
                             // console.log(`reason ${reason}`); // reason Error: ENOENT: no such file or directory, open './output2.txt'
@@ -48,14 +49,14 @@ let defaultReturn = readFile(filePath)
 
 
 
-function test() {
-    return new Promise((resolve, reject) => {
-        // resolve(1);
-        throw new Error('err');
-    })
-}
-let t = test()
-console.log(t); // Promise { <pending> }
+// function test() {
+//     return new Promise((resolve, reject) => {
+//         // resolve(1);
+//         throw new Error('err');
+//     })
+// }
+// let t = test()
+// console.log(t); // Promise { <pending> }
 
 
 // .then((value)=> {
@@ -63,3 +64,25 @@ console.log(t); // Promise { <pending> }
 //         // reject('1');
 //     });
 // })
+
+
+
+
+// new Promise((resolve, reject) => {
+//     resolve()
+//   }).then(() => {
+//     return new Promise((resolve, reject) => {
+//       resolve(new Promise((resolve, reject) => {
+//         resolve('hi')
+//       }))
+//     })
+//   }).then(res => console.log(res))
+
+
+new Promise((resolve, reject) => {
+    resolve()
+}).then(() => {
+    return new Promise((resolve, reject) => {
+        resolve('hi')
+    })
+}).then(res => console.log(res))
