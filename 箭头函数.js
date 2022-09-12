@@ -1,5 +1,4 @@
 // =>
-
 const foo = v => v; // 单个 形参可以省略()、如果函数体只有一行，则可以省略大括号和return关键字。
 // 等价
 const foo1 = function(v) {
@@ -65,8 +64,6 @@ const p1 = {
         // (function() { // 
         //     console.log(`title  ${this.title}  message    ${this.message}`); // title  undefined  message    undefined
         // })();
-
-
 
 
         console.log(`title  ${this.title}  message    ${this.message}`); //  title  xxxx  message    zzzzz
