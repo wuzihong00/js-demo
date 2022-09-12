@@ -32,19 +32,20 @@ class MyPromise {
             if (this.state !== 'pending') return;
             this.state = 'fulfilled';
             this.value = value;
+            // 注意这里的callback.fulfilled() this就是callback
             this.callbacks.forEach(callback => callback.fulfilled()); 
         }
         const reject = reason => {
             if (this.state !== 'pending') return;
             this.state = 'rejected';
             this.reason = reason;
-            // 当状态改变，会去执行then多次的所有的onFulfilled方法
+            // promise1.then(cb1, cb2);  promise1会去调用多个cb1，同理promise2会去调用promise3
             this.callbacks.forEach(callback => callback.rejected());
         }
         // 由于 executor 执行过程中可能会有异常，因此我们使用 try...catch 来进行异常处理
         // executor是立即执行的
         try {
-            executor(resolve, reject)
+            executor(resolve, reject);
         } catch(error) {
             reject(error);
         }
@@ -78,10 +79,13 @@ class MyPromise {
             }
             // 如果我们在 executor 中使用 setTimeout 延迟执行 resolve 或 reject，我们会发现执行 then 时，当前状态为 pending，因此我们还需要加入 pending 状态下的判断。
             if(this.state === 'pending') {
+                // console.log(`this.value, ${this.value}`);
                 // 先存起来，当调用 resolve 或 reject 时再去执行回调
                 // 仅保存 pending 状态下的 promise，因为如果是 resolved 或 rejected 状态下的 promise，直接执行回调即可，因为其状态和值已经改变。
-                this.callbacks.push({
+                // 注意，这里的this 调用then的那个对象，并非本实例
+                this.callbacks.push({ 
                     fulfilled: () => {
+                        console.log(`this.value1111, ${this}   ${this.value}`);
                         setTimeout(() => resolve(onFulfilled(this.value)))
                     },
                     rejected: () => {
@@ -94,15 +98,39 @@ class MyPromise {
     }
 }
 
-// export {MyPromise};
 
-// MyPromise { state: 'fulfilled', value: 'hi', reason: null, callbacks: [] }
-new MyPromise((resolve, reject) => {
-    resolve()
-}).then(() => {
-    return new MyPromise((resolve, reject) => {
-        resolve('hi')
-    })
-}).then(res => console.log(res))
+// 测试
+let promise1 = new MyPromise((resolve, reject) => {
+    setTimeout(()=>{
+        console.log(`promise1 finish`);
+        resolve(10)
+    }, 5000)
+})
+let promise2 = promise1.then((value)=>{
+        setTimeout(()=>{
+            console.log(`promise2 finish ${value}`);
+            // resolve(10)
+        }, 1000)
+    }
+);
+// 这个value是有传进来的
+let promise3 = promise2.then((value)=>{
+        setTimeout(()=>{
+            console.log(`promise2 finish ${value}`);
+            // resolve(10)
+        }, 20000)
+    }
+);
+
+// console.log(promise2.callbacks);
+// console.log(promise2);
+
+// iPromise.then((value) => {
+//     console.log(value);
+// })
+// console.log(iPromise);
+
+
+
 
 
