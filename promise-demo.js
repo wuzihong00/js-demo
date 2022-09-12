@@ -79,10 +79,25 @@ let defaultReturn = readFile(filePath)
 //   }).then(res => console.log(res))
 
 
+// 在原生 Promise 中，当 onResolved 返回了一个 promise 对象时，会将其 resolve 或 reject 的值传递到下一个 then，因此会打印出 hi。
 new Promise((resolve, reject) => {
     resolve()
 }).then(() => {
     return new Promise((resolve, reject) => {
         resolve('hi')
+    })
+}).then(res => console.log(res))
+
+
+
+// onResolved 返回了一个嵌套的 promise 对象。在原生 Promise 中，不管嵌套多少层，都会将最终 resolve 的值传递给下一个 then，因此第 9 行会打印出 hi。
+// 而我们的 Promise 打印出的依旧是最外层的 promise。
+new Promise((resolve, reject) => {
+    resolve()
+}).then(() => {
+    return new Promise((resolve, reject) => {
+    resolve(new Promise((resolve, reject) => {
+        resolve('hi')
+    }))
     })
 }).then(res => console.log(res))

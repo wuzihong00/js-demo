@@ -42,6 +42,7 @@ class MyPromise {
             this.callbacks.forEach(callback => callback.rejected());
         }
         // 由于 executor 执行过程中可能会有异常，因此我们使用 try...catch 来进行异常处理
+        // executor是立即执行的
         try {
             executor(resolve, reject)
         } catch(error) {
@@ -93,7 +94,15 @@ class MyPromise {
     }
 }
 
-export {MyPromise};
+// export {MyPromise};
 
+// MyPromise { state: 'fulfilled', value: 'hi', reason: null, callbacks: [] }
+new MyPromise((resolve, reject) => {
+    resolve()
+}).then(() => {
+    return new MyPromise((resolve, reject) => {
+        resolve('hi')
+    })
+}).then(res => console.log(res))
 
 
