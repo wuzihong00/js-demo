@@ -49,5 +49,20 @@ console.log(`setArr1  ${setArr1}`);// [ 1, 2, 3, 4 ]
 
 
 // Map与其它数据类型间的转换
+const map = new Map([['a','A'],['b','B'],[1,2]]);
+const arr4 = [...map];
+console.log(arr4); // map 转 数组
+
+// map转对象
+function mapToObj(map) {
+    let obj = {};
+    for (let [key, value] of map) {
+        obj[key] = value;
+    }
+    return obj;
+}
+let oo = mapToObj(map);
+console.log(oo);
+
 
 
